@@ -1,0 +1,54 @@
+# 视频文件
+*.mp4
+*.avi
+*.mkv
+*.mov
+*.wmv
+
+# 音频文件
+*.mp3
+*.wav
+*.m4a
+*.aac
+
+# 字幕文件
+*.srt
+*.ass
+*.ssa
+
+# 文本文件
+*.txt
+
+# 输出目录
+test_output/
+audio_files/
+subtitles/
+text_files/
+
+# Python相关
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDE相关
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store

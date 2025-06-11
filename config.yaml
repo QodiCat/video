@@ -1,0 +1,16 @@
+video:
+  is_audio: False
+  is_subtitle: False
+  input_dir: "test"  # 输入视频目录
+  output_dir: "test_output"
+    audio_dir: "audio_files"  # 音频输出目录
+    subtitle_dir: "subtitles"  # 字幕输出目录
+    text_dir: "text_files"  # 文本输出目录
+  extensions:  # 支持的视频格式
+    - ".mp4"
+    - ".avi"
+    - ".mkv"
+    - ".mov"
+    - ".wmv"
+whisper:
+  model: "turbo"  # whisper模型类型
