@@ -2,17 +2,16 @@ import os
 import subprocess
 from pathlib import Path
 import whisper
+import json
 
 def count_chinese_chars(text):
     """统计中文字符数量"""
     return sum(1 for char in text if '\u4e00' <= char <= '\u9fff')
 
-def ensure_directories(config):
+def ensure_directories(one_output_dir):
     """确保输出目录存在"""
-    if config['video']['is_audio']:
-        Path(config['video']['output']['audio_dir']).mkdir(exist_ok=True)
-    if config['video']['is_subtitle']:
-        Path(config['video']['output']['subtitle_dir']).mkdir(exist_ok=True)
+    one_output_dir.mkdir(exist_ok=True)
+
 
 def extract_audio(video_path, output_path):
     """从视频中提取音频"""
@@ -26,40 +25,41 @@ def extract_audio(video_path, output_path):
     except subprocess.CalledProcessError as e:
         print(f"提取音频失败 {video_path}: {str(e)}")
 
-def generate_subtitle(video_path, output_path, config):
+def generate_subtitle(video_path, whisper_config,output_config):
     """使用whisper生成字幕"""
-    try:
-        model = whisper.load_model(config['whisper']['model'])
-        result = model.transcribe(str(video_path))
-        
-        # 保存为SRT格式，同时保存为txt
-        with open(output_path, 'w', encoding='utf-8') as f:
+    
+    model = whisper.load_model(whisper_config['model'])
+    result = model.transcribe(str(video_path))
+    output_dir=Path(output_config['output_dir'])
+    one_output_dir=output_dir/video_path.stem
+    if output_config['is_subtitle']:
+        subtitle_path = one_output_dir /  f"subtitle.srt"
+        with open(subtitle_path, 'w', encoding='utf-8') as f:
             for i, segment in enumerate(result['segments'], start=1):
                 start = format_time(segment['start'])
                 end = format_time(segment['end'])
                 text = segment['text'].strip()
-                
                 f.write(f"{i}\n")
                 f.write(f"{start} --> {end}\n")
                 f.write(f"{text}\n\n")
-        
-        #保存为txt
+    
+    if output_config['is_text']:
         full_text = ""
-        txt_path = Path(config['video']['output']['subtitle_dir']) / f"{video_path.stem}.txt"
+        txt_path = one_output_dir / f"text.txt"
         with open(txt_path, 'w', encoding='utf-8') as f:
             for i, segment in enumerate(result['segments'], start=1):
                 text = segment['text'].strip()
                 full_text += text + "，"
                 f.write(f"{text}，")
-        
-        # 统计字数
         char_count = count_chinese_chars(full_text)
         print(f"文本总字数: {char_count}")
+    
+        json_path = one_output_dir / f"info.json"
+        #将full_text和char_count写入json
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump({'text': full_text, 'char_count': char_count}, f, ensure_ascii=False)
         
-        print(f"成功生成字幕: {output_path}")
-    except Exception as e:
-        print(f"生成字幕失败 {video_path}: {str(e)}")
-
+        
 def format_time(seconds):
     """将秒数转换为SRT时间格式"""
     hours = int(seconds // 3600)
@@ -70,22 +70,26 @@ def format_time(seconds):
 
 def process_videos(config):
     """处理所有视频文件"""
-    ensure_directories(config)
+    video_config=config['video']
+    whisper_config=config['whisper']
+    output_config=video_config['output']
+    output_dir=Path(output_config['output_dir'])
+    output_dir.mkdir(exist_ok=True)
     
-    video_extensions = set(config['video']['extensions'])
-    video_files = [f for f in Path(config['video']['input_dir']).glob("*") 
+    
+    video_extensions = set(video_config['extensions'])
+
+    video_files = [f for f in Path(video_config['input_dir']).glob("*") 
                   if f.suffix.lower() in video_extensions]
     
     for video_file in video_files:
-        # 生成输出文件路径
-        audio_path = Path(config['video']['output']['audio_dir']) / f"{video_file.stem}.mp3"
-        subtitle_path = Path(config['video']['output']['subtitle_dir']) / f"{video_file.stem}.srt"
+        one_output_dir=Path(output_config['output_dir'])/video_file.stem
+        ensure_directories(one_output_dir)
+        if output_config['is_audio']:
+            audio_path = one_output_dir / "audio.mp3"
+            extract_audio(video_file,audio_path)
+        generate_subtitle(video_file, whisper_config,output_config)
         
-        
-        extract_audio(video_file, audio_path)
-        
-        # 生成字幕
-        generate_subtitle(video_file, subtitle_path, config)
 
 if __name__ == "__main__":
     process_videos() 
