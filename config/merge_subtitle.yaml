@@ -1,0 +1,6 @@
+input:
+  video_path: "input_video/d5db74b5ae9f6a2c7eca94f5a72be22e_20250611210036.mp4"
+  subtitle_path: "subtitle.srt"
+
+output:
+  output_path: "output/merged_video.mp4"

@@ -1,6 +1,17 @@
 import subprocess
 from pathlib import Path
 import sys
+import yaml
+
+def load_config():
+    """加载配置文件"""
+    try:
+        with open('config/merge_subtitle.yaml', 'r', encoding='utf-8') as f:
+            return yaml.safe_load(f)
+    except Exception as e:
+        print(f"加载配置文件失败: {str(e)}")
+        return None 
+
 
 def merge_subtitle_to_video(video_path, subtitle_path, output_path):
     """将字幕合并到视频中"""
@@ -33,17 +44,24 @@ def merge_subtitle_to_video(video_path, subtitle_path, output_path):
         print(f"发生错误: {str(e)}")
         return False
 
-def main():
-    if len(sys.argv) != 4:
-        print("使用方法: python merge_subtitle.py <视频文件路径> <字幕文件路径> <输出文件路径>")
-        print("示例: python merge_subtitle.py input.mp4 subtitle.srt output.mp4")
+def begin_merge_subtitle():
+    """开始合并字幕到视频"""
+    config = load_config()
+    if not config:
         return
 
-    video_path = sys.argv[1]
-    subtitle_path = sys.argv[2]
-    output_path = sys.argv[3]
+    input_config = config.get('input', {})
+    output_config = config.get('output', {})
+
+    video_path = input_config.get('video_path', 'input_video.mp4')
+    subtitle_path = input_config.get('subtitle_path', 'input_subtitle.srt')
+    output_path = output_config.get('output_path', 'output/merged_video.mp4')
+
+    if not video_path or not subtitle_path or not output_path:
+        print("配置文件中缺少必要的路径信息")
+        return
 
     merge_subtitle_to_video(video_path, subtitle_path, output_path)
 
 if __name__ == "__main__":
-    main() 
+    begin_merge_subtitle()

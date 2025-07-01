@@ -19,7 +19,7 @@ import yaml
 
 def load_config():
     """加载配置文件"""
-    with open('config.yaml', 'r', encoding='utf-8') as f:
+    with open('config/images_to_video.yaml', 'r', encoding='utf-8') as f:
         return yaml.safe_load(f)
 
 
@@ -53,7 +53,9 @@ def create_video_with_dual_audio(images_dir="input_images",
                                 audio_dir="input_audio", 
                                 output_path="output/combined_video.mp4",
                                 duration_per_image=2.0,
-                                fps=24):
+                                fps=24,
+                                audio_count=1
+                                ):
     """
     创建带双音轨的视频
     
@@ -79,8 +81,8 @@ def create_video_with_dual_audio(images_dir="input_images",
     
     # 获取音频文件
     audio_files = get_audio_files(audio_dir)
-    if len(audio_files) < 2:
-        raise ValueError(f"需要至少2个音频文件，但在 {audio_dir} 中只找到 {len(audio_files)} 个")
+    if len(audio_files) < 1:
+        raise ValueError(f"需要至少1个音频文件，但在 {audio_dir} 中只找到 {len(audio_files)} 个")
     
     print(f"找到 {len(audio_files)} 个音频文件:")
     for audio in audio_files:
@@ -89,7 +91,6 @@ def create_video_with_dual_audio(images_dir="input_images",
     # 创建图片序列视频
     print("\n正在创建图片序列视频...")
     video_duration = len(image_files) * duration_per_image
-    
     # 为每张图片创建指定时长的片段
     clips = []
     for i, img_path in enumerate(image_files):
@@ -105,8 +106,8 @@ def create_video_with_dual_audio(images_dir="input_images",
     # 处理音频轨道
     print("\n正在处理音频轨道...")
     audio_clips = []
-    
-    for audio_path in audio_files[:2]:  # 只使用前两个音频文件
+
+    for audio_path in audio_files[:audio_count]:  # 只使用前audio_count个音频文件
         audio = AudioFileClip(audio_path)
         
         # 如果音频比视频长，截取到视频长度
@@ -152,25 +153,33 @@ def create_video_with_dual_audio(images_dir="input_images",
     print(f"   - 音轨数量: {len(audio_clips)}")
 
 
-def main():
+def begin_images_to_video():
     """主函数"""
     try:
         # 加载配置
         config = load_config()
         
         # 获取输出目录配置
-        output_dir = config.get('video', {}).get('output', {}).get('output_dir', 'output')
-        
+        output_config = config.get('video', {}).get('output', {})
+        input_config = config.get('video', {}).get('input', {})
+
+        # 设置输入路径
+        images_dir = input_config.get('input_dir', 'input_images')
+        audio_dir = input_config.get('audio_dir', 'input_audio')
         # 设置输出路径
-        output_path = os.path.join(output_dir, "combined_video.mp4")
-        
+        output_path = os.path.join(output_config.get('output_dir', 'output'), "combined_video.mp4")
+        #设置视频帧率和每张图片显示时长
+        duration_per_image = output_config.get('duration_per_image', 3.0)  
+        fps = output_config.get('fps', 24)
+
         # 创建视频
         create_video_with_dual_audio(
-            images_dir="input_images",
-            audio_dir="input_audio", 
+            images_dir=images_dir,
+            audio_dir=audio_dir,
             output_path=output_path,
-            duration_per_image=3.0,  # 每张图片显示3秒
-            fps=24
+            duration_per_image=duration_per_image,
+            fps=fps,
+            audio_count=output_config.get('audio_count', 1)
         )
         
     except Exception as e:
@@ -179,6 +188,3 @@ def main():
     
     return 0
 
-
-if __name__ == "__main__":
-    exit(main()) 

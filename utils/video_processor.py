@@ -1,9 +1,23 @@
+"""视频处理工具类
+核心实现视频提取音频，生成字幕SRT和文本文件，并统计中文字符数量。
+
+"""
 import os
 import subprocess
 from pathlib import Path
 import whisper
 import json
+import yaml
 
+def load_config(config_path='config/video_processor.yaml'):
+    """加载配置文件"""
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
+            return yaml.safe_load(f)
+    except Exception as e:
+        print(f"加载配置文件失败: {str(e)}")
+        return None 
+    
 def count_chinese_chars(text):
     """统计中文字符数量"""
     return sum(1 for char in text if '\u4e00' <= char <= '\u9fff')
@@ -36,9 +50,9 @@ def generate_subtitle(video_path, whisper_config,output_config):
         subtitle_path = one_output_dir /  f"subtitle.srt"
         with open(subtitle_path, 'w', encoding='utf-8') as f:
             for i, segment in enumerate(result['segments'], start=1):
-                start = format_time(segment['start'])
-                end = format_time(segment['end'])
-                text = segment['text'].strip()
+                start = format_time(segment['start'])  # type: ignore
+                end = format_time(segment['end'])      # type: ignore
+                text = segment['text'].strip()         # type: ignore
                 f.write(f"{i}\n")
                 f.write(f"{start} --> {end}\n")
                 f.write(f"{text}\n\n")
@@ -48,7 +62,7 @@ def generate_subtitle(video_path, whisper_config,output_config):
         txt_path = one_output_dir / f"text.txt"
         with open(txt_path, 'w', encoding='utf-8') as f:
             for i, segment in enumerate(result['segments'], start=1):
-                text = segment['text'].strip()
+                text = segment['text'].strip()         # type: ignore
                 full_text += text + "，"
                 f.write(f"{text}，")
         char_count = count_chinese_chars(full_text)
@@ -68,13 +82,19 @@ def format_time(seconds):
     milliseconds = int((seconds - int(seconds)) * 1000)
     return f"{hours:02d}:{minutes:02d}:{int(seconds):02d},{milliseconds:03d}"
 
-def process_videos(config):
+def process_videos():
     """处理所有视频文件"""
+    config = load_config()
+    if not config:
+        print("配置文件加载失败")
+        return
     video_config=config['video']
     whisper_config=config['whisper']
     output_config=video_config['output']
     output_dir=Path(output_config['output_dir'])
-    output_dir.mkdir(exist_ok=True)
+    # 确保输出目录存在
+    ensure_directories(output_dir)
+    
     
     
     video_extensions = set(video_config['extensions'])
@@ -92,4 +112,6 @@ def process_videos(config):
         
 
 if __name__ == "__main__":
-    process_videos() 
+    # 这里需要传入config，或者从文件加载
+    # process_videos()  # 需要config参数
+    pass 

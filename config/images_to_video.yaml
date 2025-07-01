@@ -1,0 +1,14 @@
+video:
+  input:
+    input_dir: "input_images"  # 输入图片目录
+    audio_dir: "input_audio"  # 输入音频目录
+  output:
+    output_dir: "output/images_to_video"  # 主输出目录
+    duration_per_image: 3.0  # 每张图片显示时长（秒）
+    fps: 24  # 视频帧率
+    audio_count: 1  # 音频轨道数量，默认为1
+
+whisper:
+  model: "turbo"  # whisper模型类型
+
+

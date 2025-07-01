@@ -1,0 +1,11 @@
+video:
+  input_dir: "input_video"
+  output:
+    output_dir: "output_video/processed"
+    is_audio: False
+    is_text: True
+    is_subtitle: True
+  extensions: [".mp4", ".mkv"]
+
+whisper:
+  model: "medium"

@@ -1,17 +1,7 @@
-video:
-  input_dir: "feels"  # 输入视频目录
-  output:
-    is_text: True
-    is_audio: True
-    is_subtitle: True
-    output_dir: "output/feels"  # 主输出目录
-  extensions:  # 支持的视频格式
-    - ".mp4"
-    - ".avi"
-    - ".mkv"
-    - ".mov"
-    - ".wmv"
-whisper:
-  model: "turbo"  # whisper模型类型
+actions:
+  images_to_video: False  # 是否启用图片转视频功能
+  process_videos: False  # 是否启用视频处理功能
+  begin_merge_subtitle: True  # 是否启用字幕合并功能
+
 
 
